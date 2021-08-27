@@ -3,7 +3,7 @@ using System;
 
 namespace workshopdiomedes.Functions.Entities
 {
-    internal class WorkshopEntity : TableEntity
+    public class WorkshopEntity : TableEntity
     {
         public int idemployee { get; set; }
         public DateTime date { get; set; }

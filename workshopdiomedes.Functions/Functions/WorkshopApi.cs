@@ -138,5 +138,65 @@ namespace workshopdiomedes.Functions.Functions
             });
         }
 
+        [FunctionName(nameof(GetWorkshopById))]
+        public static IActionResult GetWorkshopById(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "workshop/{id}")] HttpRequest req,
+            [Table("workshop", "WORKSHOP", "{id}", Connection = "AzureWebJobsStorage")] WorkshopEntity workshopEntity,
+            string id,
+            ILogger log)
+        {
+            log.LogInformation($"Get input or output by id: {id}, received.");
+
+            if (workshopEntity == null)
+            {
+                return new BadRequestObjectResult(new Response
+                {
+                    IsSuccess = false,
+                    Message = "Todo not found."
+                });
+            }
+
+            string message = $"input or output: {workshopEntity.RowKey}, retrieved.";
+            log.LogInformation(message);
+
+            return new OkObjectResult(new Response
+            {
+                IsSuccess = true,
+                Message = message,
+                Result = workshopEntity
+            });
+        }
+
+        [FunctionName(nameof(DeleteWorkshop))]
+        public static async Task<IActionResult> DeleteWorkshop(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "workshop/{id}")] HttpRequest req,
+        [Table("workshop", "WORKSHOP", "{id}", Connection = "AzureWebJobsStorage")] WorkshopEntity workshopEntity,
+        [Table("workshop", Connection = "AzureWebJobsStorage")] CloudTable workshopTable,
+        string id,
+        ILogger log)
+        {
+            log.LogInformation($"Deleyte input or output: {id}, received.");
+
+            if (workshopEntity == null)
+            {
+                return new BadRequestObjectResult(new Response
+                {
+                    IsSuccess = false,
+                    Message = "Input or output not found."
+                });
+            }
+
+            await workshopTable.ExecuteAsync(TableOperation.Delete(workshopEntity));
+            string message = $"Input or output: {workshopEntity.RowKey}, deleted.";
+            log.LogInformation(message);
+
+            return new OkObjectResult(new Response
+            {
+                IsSuccess = true,
+                Message = message,
+                Result = workshopEntity
+            });
+        }
+
     }
 }
