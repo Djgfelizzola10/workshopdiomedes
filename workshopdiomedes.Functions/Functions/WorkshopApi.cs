@@ -198,5 +198,36 @@ namespace workshopdiomedes.Functions.Functions
             });
         }
 
+
+        [FunctionName(nameof(ConsoliteWorkshop))]
+        public static async Task<IActionResult> ConsoliteWorkshop(
+           [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "consolidated")] HttpRequest req,
+           [Table("workshop", Connection = "AzureWebJobsStorage")] CloudTable workshopTable,
+           ILogger log)
+        {
+            log.LogInformation("Get all input and output received");
+
+            string filter = TableQuery.GenerateFilterConditionForBool("consolidated", QueryComparisons.Equal, false);
+            TableQuery<WorkshopEntity> query = new TableQuery<WorkshopEntity>().Where(filter);
+            TableQuerySegment<WorkshopEntity> workshopsFalse = await workshopTable.ExecuteQuerySegmentedAsync(query, null);
+            int numberEmployees = 0;
+            foreach (WorkshopEntity completedTodo in workshopsFalse)
+            {numberEmployees++;}
+            numberEmployees = numberEmployees / 2;
+
+           for
+
+            string message = $"Cantidad de empleados: {numberEmployees}";
+            log.LogInformation(message);
+
+
+            return new OkObjectResult(new Response
+            {
+                IsSuccess = true,
+                Message = message,
+                Result = workshopsFalse
+            });
+        }
+
     }
 }

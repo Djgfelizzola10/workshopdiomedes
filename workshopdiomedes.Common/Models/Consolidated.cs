@@ -1,12 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace workshopdiomedes.Common.Models
 {
-    public class Workshop
+    class Consolidated
     {
         public int idemployee { get; set; }
         public DateTime date { get; set; }
-        public int type { get; set; }
-        public bool consolidated { get; set; }
+        public int minutesWork { get; set; }
     }
 }
