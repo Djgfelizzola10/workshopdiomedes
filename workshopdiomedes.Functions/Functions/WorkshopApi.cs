@@ -62,5 +62,59 @@ namespace workshopdiomedes.Functions.Functions
                 Result = workshopEntity
             });
         }
+
+
+        [FunctionName(nameof(UpdateWorkshop))]
+        public static async Task<IActionResult> UpdateWorkshop(
+          [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "todo/{id}")] HttpRequest req,
+          [Table("todo", Connection = "AzureWebJobsStorage")] CloudTable todoTable,
+          string id,
+          ILogger log)
+        {
+            log.LogInformation($"Update for input or output:{id},received.");
+
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            Workshop workshop = JsonConvert.DeserializeObject<Workshop>(requestBody);
+
+            //Validate input or output id
+            TableOperation findOperation = TableOperation.Retrieve<WorkshopEntity>("WORKSHOP", id);
+            TableResult findResult = await todoTable.ExecuteAsync(findOperation);
+
+            if (findResult.Result == null)
+            {
+                return new BadRequestObjectResult(new Response
+                {
+                    IsSuccess = false,
+                    Message = "Input or output not found."
+                });
+            }
+
+            //Update input or output
+            WorkshopEntity workshopEntity = (WorkshopEntity)findResult.Result;
+            workshopEntity.consolidated = workshop.consolidated;
+            if (!string.IsNullOrEmpty(workshop?.idemployee.ToString()))
+            {
+                workshopEntity.idemployee = workshop.idemployee;
+            }else if (!string.IsNullOrEmpty(workshop?.date.ToString()))
+            {
+                workshopEntity.date = workshop.date;
+            }else if (!string.IsNullOrEmpty(workshop?.type.ToString()))
+            {
+                workshopEntity.type = workshop.type;
+            }
+
+            TableOperation addOperation = TableOperation.Replace(workshopEntity);
+            await todoTable.ExecuteAsync(addOperation);
+
+            string message = $"Input or output: {id}, update in table";
+            log.LogInformation(message);
+
+            return new OkObjectResult(new Response
+            {
+                IsSuccess = true,
+                Message = message,
+                Result = workshopEntity
+            });
+        }
     }
 }
