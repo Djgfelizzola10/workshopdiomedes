@@ -66,8 +66,8 @@ namespace workshopdiomedes.Functions.Functions
 
         [FunctionName(nameof(UpdateWorkshop))]
         public static async Task<IActionResult> UpdateWorkshop(
-          [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "todo/{id}")] HttpRequest req,
-          [Table("todo", Connection = "AzureWebJobsStorage")] CloudTable todoTable,
+          [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "workshop/{id}")] HttpRequest req,
+          [Table("workshop", Connection = "AzureWebJobsStorage")] CloudTable workshopTable,
           string id,
           ILogger log)
         {
@@ -78,7 +78,7 @@ namespace workshopdiomedes.Functions.Functions
 
             //Validate input or output id
             TableOperation findOperation = TableOperation.Retrieve<WorkshopEntity>("WORKSHOP", id);
-            TableResult findResult = await todoTable.ExecuteAsync(findOperation);
+            TableResult findResult = await workshopTable.ExecuteAsync(findOperation);
 
             if (findResult.Result == null)
             {
@@ -92,19 +92,17 @@ namespace workshopdiomedes.Functions.Functions
             //Update input or output
             WorkshopEntity workshopEntity = (WorkshopEntity)findResult.Result;
             workshopEntity.consolidated = workshop.consolidated;
-            if (!string.IsNullOrEmpty(workshop?.idemployee.ToString()))
+
+
+            if (!(string.IsNullOrEmpty(workshop.idemployee.ToString())) && !(string.IsNullOrEmpty(workshop.date.ToString())) && !(string.IsNullOrEmpty(workshop.type.ToString())))
             {
                 workshopEntity.idemployee = workshop.idemployee;
-            }else if (!string.IsNullOrEmpty(workshop?.date.ToString()))
-            {
                 workshopEntity.date = workshop.date;
-            }else if (!string.IsNullOrEmpty(workshop?.type.ToString()))
-            {
                 workshopEntity.type = workshop.type;
             }
 
             TableOperation addOperation = TableOperation.Replace(workshopEntity);
-            await todoTable.ExecuteAsync(addOperation);
+            await workshopTable.ExecuteAsync(addOperation);
 
             string message = $"Input or output: {id}, update in table";
             log.LogInformation(message);
@@ -116,5 +114,29 @@ namespace workshopdiomedes.Functions.Functions
                 Result = workshopEntity
             });
         }
+
+        [FunctionName(nameof(GetAllWorkshop))]
+        public static async Task<IActionResult> GetAllWorkshop(
+           [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "workshop")] HttpRequest req,
+           [Table("workshop", Connection = "AzureWebJobsStorage")] CloudTable workshopTable,
+           ILogger log)
+        {
+            log.LogInformation("Get all input and output received");
+
+            TableQuery<WorkshopEntity> query = new TableQuery<WorkshopEntity>();
+            TableQuerySegment<WorkshopEntity> workshops = await workshopTable.ExecuteQuerySegmentedAsync(query, null);
+
+            string message = "Retrieved all input and output";
+            log.LogInformation(message);
+
+
+            return new OkObjectResult(new Response
+            {
+                IsSuccess = true,
+                Message = message,
+                Result = workshops
+            });
+        }
+
     }
 }
