@@ -217,16 +217,17 @@ namespace workshopdiomedes.Functions.Functions
             string message = "";
             if (workshopsFalse.Results.Count != 0)
             {
-                for (int x = 1; x < 3; x++)
+                foreach (WorkshopEntity completedTodo2 in workshopsFalse)
                 {
+                    if(completedTodo2.type==0){
                     DateTime DateIn = default(DateTime);
                     DateTime DateOut = default(DateTime);
                     TimeSpan difFechas = TimeSpan.Zero;
-                    int verificar= 0;
+                    int verificar = 0;
 
                     foreach (WorkshopEntity completedTodo in workshopsFalse)
                     {
-                        if (completedTodo.idemployee == x)
+                        if (completedTodo.idemployee == completedTodo2.idemployee)
                         {
                             if (completedTodo.type == 0)
                             {
@@ -242,9 +243,10 @@ namespace workshopdiomedes.Functions.Functions
                         completedTodo.consolidated = true;
                         TableOperation addOperation = TableOperation.Replace(completedTodo);
                         await workshopTable.ExecuteAsync(addOperation);
+
                     }
 
-                    if (verificar==2)
+                    if (verificar == 2)
                     {
                         count++;
                         difFechas = DateOut - DateIn;
@@ -255,7 +257,7 @@ namespace workshopdiomedes.Functions.Functions
                             RowKey = Guid.NewGuid().ToString(),
                             date = DateTime.Today,
                             minutesWork = (int)difFechas.TotalMinutes,
-                            idemployee = x
+                            idemployee = completedTodo2.idemployee
                         };
 
                         TableOperation addOperation = TableOperation.Insert(consolEntity);
@@ -265,7 +267,7 @@ namespace workshopdiomedes.Functions.Functions
                     {
                         foreach (WorkshopEntity completedTodo in workshopsFalse)
                         {
-                            if (completedTodo.idemployee == x)
+                            if (completedTodo.idemployee == completedTodo2.idemployee)
                             {
                                 if (completedTodo.type == 0)
                                 {
@@ -276,6 +278,7 @@ namespace workshopdiomedes.Functions.Functions
                             }
                         }
                     }
+                }
                 }
 
                 
