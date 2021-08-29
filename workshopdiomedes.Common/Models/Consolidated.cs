@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace workshopdiomedes.Common.Models
 {
-    class Consolidated
+    public class Consolidated
     {
         public int idemployee { get; set; }
         public DateTime date { get; set; }

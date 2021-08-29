@@ -16,6 +16,7 @@ namespace workshopdiomedes.Functions.Functions
 {
     public static class WorkshopApi
     {
+
         [FunctionName(nameof(CreateWorkshop))]
         public static async Task<IActionResult> CreateWorkshop(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "workshop")] HttpRequest req,
@@ -201,31 +202,78 @@ namespace workshopdiomedes.Functions.Functions
 
         [FunctionName(nameof(ConsoliteWorkshop))]
         public static async Task<IActionResult> ConsoliteWorkshop(
-           [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "consolidated")] HttpRequest req,
+           [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "consolidated")] HttpRequest req,
            [Table("workshop", Connection = "AzureWebJobsStorage")] CloudTable workshopTable,
+           [Table("consolidated", Connection = "AzureWebJobsStorage")] CloudTable ConsolidatedTable,
            ILogger log)
         {
             log.LogInformation("Get all input and output received");
 
             string filter = TableQuery.GenerateFilterConditionForBool("consolidated", QueryComparisons.Equal, false);
             TableQuery<WorkshopEntity> query = new TableQuery<WorkshopEntity>().Where(filter);
-            TableQuerySegment<WorkshopEntity> workshopsFalse = await workshopTable.ExecuteQuerySegmentedAsync(query, null);
-            int numberEmployees = 0;
-            foreach (WorkshopEntity completedTodo in workshopsFalse)
-            {numberEmployees++;}
-            numberEmployees = numberEmployees / 2;
+            TableQuerySegment<WorkshopEntity> workshopsFalse = await
+            workshopTable.ExecuteQuerySegmentedAsync(query, null);
+            int count = 0;
+            string message = "";
+            if (workshopsFalse.Results.Count != 0)
+            {
+                for (int x = 1; x < 3; x++)
+                {
+                    DateTime DateIn = default(DateTime);
+                    DateTime DateOut = default(DateTime);
+                    TimeSpan difFechas = TimeSpan.Zero;
+                    int verificar= 0;
 
-           for
+                    foreach (WorkshopEntity completedTodo in workshopsFalse)
+                    {
+                        if (completedTodo.idemployee == x)
+                        {
+                            if (completedTodo.type == 0)
+                            {
+                                verificar++;
+                                DateIn = completedTodo.date;
+                            }
+                            else
+                            {
+                                verificar++;
+                                DateOut = completedTodo.date;
+                            }
+                        }
+                        completedTodo.consolidated = true;
+                        TableOperation addOperation = TableOperation.Replace(completedTodo);
+                        await workshopTable.ExecuteAsync(addOperation);
+                    }
 
-            string message = $"Cantidad de empleados: {numberEmployees}";
+                    if (verificar==2)
+                    {
+                        count++;
+                        difFechas = DateOut - DateIn;
+                        ConsolidatedEntity consolEntity = new ConsolidatedEntity
+                        {
+                            ETag = "*",
+                            PartitionKey = "CONSOLIDATED",
+                            RowKey = Guid.NewGuid().ToString(),
+                            date = DateTime.Today,
+                            minutesWork = (int)difFechas.TotalMinutes,
+                            idemployee = x
+                        };
+
+                        TableOperation addOperation = TableOperation.Insert(consolEntity);
+                        await ConsolidatedTable.ExecuteAsync(addOperation);
+                    }
+                }
+
+                
+            }
+
+            message = $"Se añadieron {count} registros";
             log.LogInformation(message);
-
 
             return new OkObjectResult(new Response
             {
                 IsSuccess = true,
                 Message = message,
-                Result = workshopsFalse
+                //Result = workshopsFalse
             });
         }
 
