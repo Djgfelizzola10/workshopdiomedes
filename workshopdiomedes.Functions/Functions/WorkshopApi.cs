@@ -214,60 +214,80 @@ namespace workshopdiomedes.Functions.Functions
             TableQuerySegment<WorkshopEntity> workshopsFalse = await
             workshopTable.ExecuteQuerySegmentedAsync(query, null);
             int count = 0;
+            int count2 = 0;
             string message = "";
             if (workshopsFalse.Results.Count != 0)
             {
-                foreach (WorkshopEntity completedTodo2 in workshopsFalse)
+                foreach (WorkshopEntity workshopSw in workshopsFalse)
                 {
-                    if(completedTodo2.type==0){
+                    if(workshopSw.type==0){
                     DateTime DateIn = default(DateTime);
                     DateTime DateOut = default(DateTime);
                     TimeSpan difFechas = TimeSpan.Zero;
                     int verificar = 0;
 
-                    foreach (WorkshopEntity completedTodo in workshopsFalse)
+                    foreach (WorkshopEntity workshopSw2 in workshopsFalse)
                     {
-                        if (completedTodo.idemployee == completedTodo2.idemployee)
+                        if (workshopSw2.idemployee == workshopSw.idemployee)
                         {
-                            if (completedTodo.type == 0)
+                            if (workshopSw2.type == 0)
                             {
                                 verificar++;
-                                DateIn = completedTodo.date;
+                                DateIn = workshopSw2.date;
                             }
                             else
                             {
                                 verificar++;
-                                DateOut = completedTodo.date;
+                                DateOut = workshopSw2.date;
                             }
                         }
-                        completedTodo.consolidated = true;
-                        TableOperation addOperation = TableOperation.Replace(completedTodo);
+                        workshopSw2.consolidated = true;
+                        TableOperation addOperation = TableOperation.Replace(workshopSw2);
                         await workshopTable.ExecuteAsync(addOperation);
 
                     }
 
                     if (verificar == 2)
                     {
-                        count++;
-                        difFechas = DateOut - DateIn;
-                        ConsolidatedEntity consolEntity = new ConsolidatedEntity
-                        {
-                            ETag = "*",
-                            PartitionKey = "CONSOLIDATED",
-                            RowKey = Guid.NewGuid().ToString(),
-                            date = DateTime.Today,
-                            minutesWork = (int)difFechas.TotalMinutes,
-                            idemployee = completedTodo2.idemployee
-                        };
+                            string filter2 = TableQuery.CombineFilters(TableQuery.GenerateFilterConditionForInt("idemployee", QueryComparisons.Equal, workshopSw.idemployee),
+                                TableOperators.And,
+                                TableQuery.GenerateFilterConditionForDate("date", QueryComparisons.Equal, DateTime.Today));
+                            TableQuery<ConsolidatedEntity> query2 = new TableQuery<ConsolidatedEntity>().Where(filter2);
+                            TableQuerySegment<ConsolidatedEntity> Consolidated2 = await ConsolidatedTable.ExecuteQuerySegmentedAsync(query2, null);
+                            if (Consolidated2.Results.Count!=0)
+                            {
+                                foreach (ConsolidatedEntity consolidatedsw in Consolidated2)
+                                {
+                                    count2++;
+                                    difFechas = DateOut - DateIn;
+                                    consolidatedsw.minutesWork = consolidatedsw.minutesWork+ (int)difFechas.TotalMinutes;
+                                    TableOperation addOperation = TableOperation.Replace(consolidatedsw);
+                                    await ConsolidatedTable.ExecuteAsync(addOperation);
+                                }
+                            }
+                            else
+                            {
+                                count++;
+                                difFechas = DateOut - DateIn;
+                                ConsolidatedEntity consolEntity = new ConsolidatedEntity
+                                {
+                                    ETag = "*",
+                                    PartitionKey = "CONSOLIDATED",
+                                    RowKey = Guid.NewGuid().ToString(),
+                                    date = DateTime.Today,
+                                    minutesWork = (int)difFechas.TotalMinutes,
+                                    idemployee = workshopSw.idemployee
+                                };
 
-                        TableOperation addOperation = TableOperation.Insert(consolEntity);
-                        await ConsolidatedTable.ExecuteAsync(addOperation);
+                                TableOperation addOperation = TableOperation.Insert(consolEntity);
+                                await ConsolidatedTable.ExecuteAsync(addOperation);
+                            }
                     }
                     else
                     {
                         foreach (WorkshopEntity completedTodo in workshopsFalse)
                         {
-                            if (completedTodo.idemployee == completedTodo2.idemployee)
+                            if (completedTodo.idemployee == workshopSw.idemployee)
                             {
                                 if (completedTodo.type == 0)
                                 {
@@ -284,7 +304,7 @@ namespace workshopdiomedes.Functions.Functions
                 
             }
 
-            message = $"Se añadieron {count} registros";
+            message = $"Se añadieron: {count} registros y se actualizaron: {count2}";
             log.LogInformation(message);
 
             return new OkObjectResult(new Response
