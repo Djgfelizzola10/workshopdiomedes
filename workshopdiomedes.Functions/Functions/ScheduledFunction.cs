@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
@@ -117,7 +118,6 @@ namespace workshopdiomedes.Functions.Functions
 
             message = $"Se añadieron: {count} registros y se actualizaron: {count2}";
             log.LogInformation(message);
-
         }
     }
 }

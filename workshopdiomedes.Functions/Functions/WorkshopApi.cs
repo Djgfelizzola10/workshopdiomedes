@@ -97,9 +97,12 @@ namespace workshopdiomedes.Functions.Functions
 
             if (!(string.IsNullOrEmpty(workshop.idemployee.ToString())) && !(string.IsNullOrEmpty(workshop.date.ToString())) && !(string.IsNullOrEmpty(workshop.type.ToString())))
             {
-                workshopEntity.idemployee = workshop.idemployee;
-                workshopEntity.date = workshop.date;
-                workshopEntity.type = workshop.type;
+                if(workshopEntity.type==0 || workshopEntity.type == 1)
+                {
+                    workshopEntity.idemployee = workshop.idemployee;
+                    workshopEntity.date = workshop.date;
+                    workshopEntity.type = workshop.type;
+                }
             }
 
             TableOperation addOperation = TableOperation.Replace(workshopEntity);
