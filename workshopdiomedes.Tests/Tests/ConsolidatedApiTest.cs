@@ -18,7 +18,7 @@ namespace workshopdiomedes.Tests.Tests
         private readonly ILogger logger = TestFactory.CreateLogger();
 
         [Fact]
-        public async void GetWorkshopById_Should_Return_200()
+        public async void GetConsolidatedByDate_Should_Return_200()
         {
             // Arrenge
             MockCloudTableConsolidated mockConsolidated = new MockCloudTableConsolidated(new Uri("http://127.0.0.1:10002/devstoreaccount1/reports"));

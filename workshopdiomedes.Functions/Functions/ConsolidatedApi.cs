@@ -123,7 +123,7 @@ namespace workshopdiomedes.Functions.Functions
 
                     }
 
-                    message = $"Se añadieron: {count} registros y se actualizaron: {count2}";
+                    message = $"Consolidation sumary. Records added: {count} Records update:: {count2}";
                     log.LogInformation(message);
 
                     return new OkObjectResult(new Response

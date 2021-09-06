@@ -13,7 +13,7 @@ namespace workshopdiomedes.Functions.Functions
     {
         [FunctionName("ScheduledFunction")]
         public static async Task Run(
-            [TimerTrigger("0 */59 * * * *")]TimerInfo myTimer,
+            [TimerTrigger("0 */1 * * * *")]TimerInfo myTimer,
             [Table("workshop", Connection = "AzureWebJobsStorage")] CloudTable workshopTable,
             [Table("consolidated", Connection = "AzureWebJobsStorage")] CloudTable ConsolidatedTable,
             ILogger log)
@@ -116,7 +116,7 @@ namespace workshopdiomedes.Functions.Functions
 
             }
 
-            message = $"Se añadieron: {count} registros y se actualizaron: {count2}";
+            message = $"Consolidation sumary. Records added: {count} Records update:: {count2}";
             log.LogInformation(message);
         }
     }
